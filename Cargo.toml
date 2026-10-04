@@ -1,0 +1,19 @@
+[package]
+name = "rustrojan_lab"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies] 
+axum = "0.8.9"
+tokio = { version = "1.0", features = ["full"] }
+sqlx = { version = "0.6", features = [ "postgres","runtime-tokio-rustls" ] }
+fake = { version = "5", features = ["derive"] }
+bcrypt = "0.19.3"
+
+[workspace]
+members = [
+    "rustrojan",
+    "victims_server"
+    ]
+    
+resolver = "3"
