@@ -1,8 +1,8 @@
 -- Add migration script here
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT,
-    email TEXT,
-    password_hash TEXT,
-    payment_token TEXT
+    name TEXT NOT NULL,
+    email TEXT NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL,
+    payment_token TEXT NOT NULL
 );
