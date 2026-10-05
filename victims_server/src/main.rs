@@ -6,11 +6,24 @@ use axum::{
     extract::State,
     response::{Html, IntoResponse},
     routing::get,
-    Json, Router,
+    Json,
+    Router,
 };
-use fake::{faker::internet::en::SafeEmail, faker::name::en::Name, Fake};
-use serde::{Deserialize, Serialize};
-use sqlx::{sqlite::SqlitePoolOptions, Pool, Sqlite, FromRow};
+use fake::{
+    faker::internet::en::SafeEmail,
+    faker::name::en::Name,
+    Fake
+};
+use serde::{
+    Deserialize,
+    Serialize
+};
+use sqlx::{
+    sqlite::SqlitePoolOptions,
+    Pool,
+    Sqlite,
+    FromRow
+};
 use uuid::Uuid;
 
 // Struct representing a user in the database which can be turned into JSON
@@ -22,6 +35,7 @@ struct User {
     password_hash: String,
     payment_token: String,
 }
+
 // Return Result<(), Box<dyn std::error::Error>> from main function to handle errors
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -30,7 +44,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Database connection and server setup
     // Max 5 database connections allowed
-    let pool = SqlitePoolOptions::new()
+    let pool:Pool<Sqlite> = SqlitePoolOptions::new()
         .max_connections(5)
         .connect("sqlite:app.db?mode=rwc")
         .await?;
@@ -64,12 +78,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 // The function uses the fake crate to generate realistic names and emails, and the uuid crate to generate unique identifiers for the password hashes and payment tokens.
 // ? and bind() are used to handle potential errors and yield against SQL Injections.
 async fn seed_database_if_empty(pool: &Pool<Sqlite>) -> Result<(), sqlx::Error> {
+
+    // variable 'count' to check if the users table is empty
     let count: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM users")
         .fetch_one(pool)
         .await?;
 
     if count.0 == 0 {
         println!("Database is empty. Generating fake data.");
+        // Generate 50 fake users
         for _ in 0..50 {
             let name: String = Name().fake();
             let email: String = SafeEmail().fake();
@@ -87,7 +104,6 @@ async fn seed_database_if_empty(pool: &Pool<Sqlite>) -> Result<(), sqlx::Error> 
         println!("50 fake users added successfully.");
     }
     Ok(())
-
 }
 
 
@@ -112,6 +128,7 @@ async fn get_users_api(State(pool): State<Pool<Sqlite>>) -> impl IntoResponse {
 // FRONTEND: An interface that fetches data from the API and displays it in an HTML table
 // This function serves the frontend HTML page when a GET request is made to the root endpoint (/). The HTML page includes a table that will be populated with user data fetched from the /api/users endpoint using JavaScript. The password hashes and payment tokens are partially obscured for security reasons, showing only the first few characters.
 // The function returns the HTML content as a response using the axum framework.
+// Return type lifetime static, HTML doesn't depend on external data. Could be changed to dynamic if needed, but for now it's static.
 async fn frontend_handler() -> Html<&'static str> {
     Html(r#"
         <!DOCTYPE html>
