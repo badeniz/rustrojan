@@ -1,6 +1,5 @@
 
 // Database connection and server setup for the victims server application.
-
 // Database pool configuration and connection setup
 
 use axum::{
@@ -117,7 +116,7 @@ async fn frontend_handler() -> Html<&'static str> {
         </head>
         <body>
             <div class="container">
-                <h1>🔒 Deniz GmbH - Customer Database</h1>
+                <h1>Deniz GmbH - Customer Database</h1>
                 <p style="text-align:center; color: #666;">Only authorized personnel can access. Data is end-to-end encrypted (Simulation).</p>
                 <table id="usersTable">
                     <thead>
