@@ -22,13 +22,14 @@ struct User {
     password_hash: String,
     payment_token: String,
 }
-
+// Return Result<(), Box<dyn std::error::Error>> from main function to handle errors
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("Starting the victims server.");
 
     // Database connection and server setup
+    // Max 5 database connections allowed
     let pool = SqlitePoolOptions::new()
         .max_connections(5)
         .connect("sqlite:app.db?mode=rwc")
@@ -55,13 +56,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 
+
+
+// Function to seed the database with fake data if it is empty
+// This function checks if the users table is empty and if so, generates 50 fake users with random names, emails, password hashes, and payment tokens.
+// The password hashes and payment tokens are generated using UUIDs for simplicity.
+// The function uses the fake crate to generate realistic names and emails, and the uuid crate to generate unique identifiers for the password hashes and payment tokens.
+// ? and bind() are used to handle potential errors and yield against SQL Injections.
 async fn seed_database_if_empty(pool: &Pool<Sqlite>) -> Result<(), sqlx::Error> {
     let count: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM users")
         .fetch_one(pool)
         .await?;
 
     if count.0 == 0 {
-        println!("Database is empty. Generating fake data...");
+        println!("Database is empty. Generating fake data.");
         for _ in 0..50 {
             let name: String = Name().fake();
             let email: String = SafeEmail().fake();
@@ -82,9 +90,16 @@ async fn seed_database_if_empty(pool: &Pool<Sqlite>) -> Result<(), sqlx::Error> 
 
 }
 
-// --- WEB ROUTE HANDLERS---
+
+///////////////////////////////////////////
+////// --- WEB ROUTE HANDLERS---///////////
+///////////////////////////////////////////
+
+
 
 // API: Turns everything in the users table into JSON and returns it
+// This function handles the GET request to the /api/users endpoint. It queries the database for all users and returns them as a JSON response. If there is an error during the query, it returns an empty list of users.
+// The function uses the axum framework to handle the request and response, and the sqlx crate to interact with the SQLite database.
 async fn get_users_api(State(pool): State<Pool<Sqlite>>) -> impl IntoResponse {
     let users = sqlx::query_as::<_, User>("SELECT * FROM users")
         .fetch_all(&pool)
@@ -95,6 +110,8 @@ async fn get_users_api(State(pool): State<Pool<Sqlite>>) -> impl IntoResponse {
 }
 
 // FRONTEND: An interface that fetches data from the API and displays it in an HTML table
+// This function serves the frontend HTML page when a GET request is made to the root endpoint (/). The HTML page includes a table that will be populated with user data fetched from the /api/users endpoint using JavaScript. The password hashes and payment tokens are partially obscured for security reasons, showing only the first few characters.
+// The function returns the HTML content as a response using the axum framework.
 async fn frontend_handler() -> Html<&'static str> {
     Html(r#"
         <!DOCTYPE html>
